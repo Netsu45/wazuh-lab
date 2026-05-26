@@ -11,48 +11,95 @@
   Lab 3.
 -->
 
+#Modified RULES LAB3 STEP 3
 <group name="wazuh-lab,">
 
-  <rule id="100120" level="6">
+  <rule id="100120" level="12">
     <if_sid>31100</if_sid>
     <regex>\.%2e/|/%2e\.</regex>
+    <mitre>
+      <id>T1190</id>
+      <id>T1083</id>
+    </mitre>
+    <group>attack,web,lfi,</group>
     <description>HTTP request: url contains an encoded '..' segment</description>
   </rule>
 
-  <rule id="100175" level="7">
+  <rule id="100200" level="12">
+    <if_sid>31100</if_sid>
+    <url>etc/passwd|etc/shadow</url>
+    <mitre>
+      <id>T1190</id>
+      <id>T1083</id>
+    </mitre>
+    <group>attack,web,lfi,</group>
+    <description>Possible Local File Inclusion attempt</description>
+  </rule>
+
+  <rule id="100175" level="12">
     <if_sid>31105</if_sid>
-    <description>HTTP request: url contains a scripting expression pattern</description>
     <mitre>
       <id>T1059.007</id>
     </mitre>
+    <group>attack,web,xss,</group>
+    <description>HTTP request: url contains a scripting expression pattern</description>
   </rule>
 
-  <rule id="100130" level="6">
+  <rule id="100130" level="13">
     <match>jndi:</match>
+    <mitre>
+      <id>T1190</id>
+    </mitre>
+    <group>attack,rce,log4shell,</group>
     <description>Application log line contains the substring 'jndi:'</description>
   </rule>
 
-  <rule id="100140" level="5">
+  <rule id="100140" level="12">
     <match>pkexec</match>
+    <mitre>
+      <id>T1068</id>
+    </mitre>
+    <group>attack,privilege_escalation,</group>
     <description>System log: 'pkexec' substring observed</description>
   </rule>
 
-  <rule id="100150" level="8">
+  <rule id="100150" level="13">
     <if_sid>550,554</if_sid>
     <field name="file">/etc/passwd</field>
+    <mitre>
+      <id>T1098</id>
+      <id>T1078</id>
+    </mitre>
+    <group>attack,fim,persistence,</group>
     <description>FIM: /etc/passwd file changed</description>
   </rule>
+
+  <rule id="100166" level="12">
+    <decoded_as>corpnet-login</decoded_as>
+    <match>result=success</match>
+    <mitre>
+      <id>T1078</id>
+    </mitre>
+    <description>CorpNet Portal: login succeeded for user $(dstuser)</description>
+  </rule>
+
+  <rule id="100400" level="15" timeframe="300">
+    <if_sid>100150</if_sid>
+    <if_matched_sid>100130</if_matched_sid>
+    <mitre>
+      <id>T1068</id>
+      <id>T1078</id>
+    </mitre>
+    <group>attack,compromise,correlation,</group>
+    <description>CRITICAL: JNDI exploit followed by /etc/passwd modification. System Compromised!</description>
+  </rule>
+
+#End of modified rules Lab 3 step 3
 
   <rule id="100165" level="3">
     <decoded_as>corpnet-login</decoded_as>
     <match>result=failure</match>
     <description>CorpNet Portal: login failed for user $(dstuser)</description>
-  </rule>
-
-  <rule id="100166" level="5">
-    <decoded_as>corpnet-login</decoded_as>
-    <match>result=success</match>
-    <description>CorpNet Portal: login succeeded for user $(dstuser)</description>
   </rule>
 
   <rule id="100163" level="3">
@@ -84,4 +131,39 @@
     <description>System log: tar invoked</description>
   </rule>
 
+  # NEW Rules lab1
+  <rule id="100199" level="7">
+    <if_sid>31101</if_sid>
+    <url>/lab1-demo</url>
+    <description>lab1 demo: someone hit /lab1-demo</description>
+  </rule>
+
+  <rule id="100201" level="10" frequency="8" timeframe="30">
+    <if_matched_sid>31101</if_matched_sid>
+    <description>Web Reconnaissance: Multiple 404 errors from same IP</description>
+  </rule>
+
+  <rule id="100202" level="0">
+    <if_sid>31101</if_sid>
+    <url>^/status$</url>
+    <description>Suppress 404 for /status health-check path</description>
+  </rule>
+  # END of rules lab1
+
+  # NEW Rules lab3 Step 1
+  <rule id="100300" level="0">
+    <if_sid>31122</if_sid>
+    <description>Silence normal 500 errors</description>
+  </rule>
+
+  <rule id="100301" level="0">
+    <if_sid>100163</if_sid>
+    <description>Silence individual POST login failures</description>
+  </rule>
+
+  <rule id="100302" level="0">
+    <if_sid>100165</if_sid>
+    <description>Silence individual CorpNet Portal login failures</description>
+  </rule>
+  # END of rules lab3 Step 1
 </group>
